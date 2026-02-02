@@ -4,7 +4,37 @@ A Realtime Search Engine pipeline demonstrating how to sync a transactional Prod
 
 ## Architecture
 
-`Postgres (products)` -> `Debezium` -> `Kafka` -> `Elastic Sink` -> `Elasticsearch` -> `Python App` -> `KSQLDB (Analytics)` -> `Elasticsearch (Trending)`
+```mermaid
+graph TD
+    User([User / Python App])
+    subgraph "Real-time Analytics Loop"
+        K_Search[Kafka: search.queries]
+        KSQL[KSQLDB Aggregation]
+        K_Trend[Kafka: trending_keywords]
+        Connect[Kafka Connect]
+        ES_Trend[(Elastic: trending)]
+    end
+    
+    subgraph "Core Data Pipeline"
+        Postgres[(Postgres: products)]
+        ES_Prod[(Elastic: products)]
+    end
+
+    %% 1. Search Action
+    User -- "1. Log Search" --> K_Search
+    User -- "2. Get Results" --> ES_Prod
+
+    %% 2. Processing
+    K_Search -- "Stream" --> KSQL
+    KSQL -- "3. Count (Windowed)" --> K_Trend
+    K_Trend --> Connect --> ES_Trend
+
+    %% 3. Feedback
+    ES_Trend -.-> |"4. Fetch Top 5"| User
+
+    %% Context: Core Pipeline
+    Postgres -.-> Connect -.-> ES_Prod
+```
 
 
 ## Prerequisites
