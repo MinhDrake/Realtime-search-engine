@@ -4,7 +4,8 @@ A Realtime Search Engine pipeline demonstrating how to sync a transactional Prod
 
 ## Architecture
 
-`Postgres (products)` -> `Debezium (Source)` -> `Kafka` -> `Elastic Sink` -> `Elasticsearch (Index)`
+`Postgres (products)` -> `Debezium` -> `Kafka` -> `Elastic Sink` -> `Elasticsearch` -> `Python App` -> `KSQLDB (Analytics)` -> `Elasticsearch (Trending)`
+
 
 ## Prerequisites
 
@@ -55,6 +56,28 @@ curl "localhost:9200/dbserver1.public.products/_search?q=category:Electronics&pr
      }
    }
    ```
+
+### 5. Run Search Analytics Loop (New) 🚀
+
+This project now includes a **Real-time Search Analytics** feedback loop.
+
+1.  **Start KSQL Analytics**:
+    ```bash
+    ./scripts/setup-analytics.sh
+    ```
+    *(Configures the stream processing to calculate trending keywords)*
+
+2.  **Run the Search App**:
+    (Requires Python 3.8+)
+    ```bash
+    cd client
+    pip install -r requirements.txt
+    python3 app.py
+    ```
+
+3.  **Test It**:
+    -   In the app, search for "laptop" multiple times.
+    -   Watch the "🔥 Trending" section update in real-time!
 
 ## Key Components
 
